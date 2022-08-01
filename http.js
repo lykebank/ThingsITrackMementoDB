@@ -20,10 +20,10 @@ httpClient.prototype.get = function(query) {
   return HttpResult;
 }
 
-httpClient.prototype.post = function(url, data){
+httpClient.prototype.post = function(url, body){
   let request = new XMLHttpRequest();
   request.open('POST', url, false);
-  request.send(data);
+  request.send(body);
   if(request.status === 200){
     return request.response;
   }
