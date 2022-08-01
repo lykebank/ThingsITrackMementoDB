@@ -14,8 +14,9 @@ Salesforce.prototype.login = function(loginUrl, username, password){
         body += "</soapenv:Envelope>";
         let req = http();
         req.headers({
-            'content-type': 'text/xml',
-            'SOAPAction': ''
+            "content-type": "text/xml",
+            "SOAPAction": "",
+            "User-Agent": "MementoDB"
         });
         let loginResult = req.post(loginUrl, body);
         return loginResult;
