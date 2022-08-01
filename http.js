@@ -45,5 +45,5 @@ httpClient.prototype.headers = function (val = {}) {
 	}
 	Object.keys(val).forEach(key => {
 		this.request.setRequestHeader(key, val[key]);
-	})
+	});
 }
