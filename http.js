@@ -19,3 +19,15 @@ httpClient.prototype.get = function(query) {
   }
   return HttpResult;
 }
+
+httpClient.prototype.post = function(url, data){
+  let request = new XMLHttpRequest();
+  request.open('POST', url, false);
+  request.send(data);
+  if(request.status === 200){
+    return request.response;
+  }
+  else{
+    return request.responseText;
+  }
+}
