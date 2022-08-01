@@ -1,33 +1,49 @@
 // Mimic the Memento http().get() syntax.
 
 function http() {
-  return new httpClient();
+	return new httpClient();
 }
 
 function httpClient() {
+	this.request = new XMLHttpRequest();
 }
 
-httpClient.prototype.get = function(query) {
-  var request = new XMLHttpRequest();
-  request.open('GET', query, false);  // `false` makes the request synchronous
-  request.send(null);
-  var HttpResult = {};
-  HttpResult.code = request.status;
-  HttpResult.body = null;
-  if (request.status === 200) {
-    HttpResult.body = request.responseText;
-  }
-  return HttpResult;
+httpClient.prototype.request = new XMLHttpRequest();
+
+httpClient.prototype.get = function (url) {
+	if (!this.request) {
+		this.request = new XMLHttpRequest();
+	}
+	this.request.open('GET', url, false);
+	this.request.send(null);
+	var HttpResult = {};
+	HttpResult.code = this.request.status;
+	HttpResult.body = null;
+	if (this.request.status === 200) {
+		HttpResult.body = this.request.responseText;
+	}
+	return HttpResult;
 }
 
-httpClient.prototype.post = function(url, body){
-  let request = new XMLHttpRequest();
-  request.open('POST', url, false);
-  request.send(body);
-  if(request.status === 200){
-    return request.response;
-  }
-  else{
-    return request.responseText;
-  }
+httpClient.prototype.post = function (url, body) {
+	if (!this.request) {
+		this.request = new XMLHttpRequest();
+	}
+	this.request.open('POST', url, false);
+	this.request.send(body);
+	if (this.request.status === 200) {
+		return this.request.response;
+	}
+	else {
+		return this.request.responseText;
+	}
+}
+
+httpClient.prototype.headers = function (val = {}) {
+	if (!this.request) {
+		this.request = new XMLHttpRequest();
+	}
+	Object.keys(val).forEach(key => {
+		this.request.setRequestHeader(key, val[key]);
+	})
 }

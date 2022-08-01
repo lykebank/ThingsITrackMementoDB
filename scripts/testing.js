@@ -12,8 +12,12 @@ Salesforce.prototype.login = function(loginUrl, username, password){
                 body += "</urn:login>"
             body += "</soapenv:Body>"
         body += "</soapenv:Envelope>";
-
-        let loginResult = http().post(loginUrl, body);
+        let req = http();
+        req.headers({
+            'content-type': 'text/xml',
+            'SOAPAction': ''
+        });
+        let loginResult = req.post(loginUrl, body);
         return loginResult;
     }
     else{
