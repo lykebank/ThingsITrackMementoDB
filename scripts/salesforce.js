@@ -31,7 +31,7 @@ var Salesforce = {
             return null;
         }
     },
-    getAccessToken = function({
+    getAccessToken: function({
         url = 'https://login.salesforce.com/services/oauth2/token',
         username = 'username',
         password = 'password',
