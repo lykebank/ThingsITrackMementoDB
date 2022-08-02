@@ -1,5 +1,5 @@
 var Salesforce = {
-    /* login: function(loginUrl, username, password){
+    login: function(loginUrl, username, password){
         if(loginUrl && username && password){
             let body = '';
             body += '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:enterprise.soap.sforce.com">';
@@ -30,14 +30,14 @@ var Salesforce = {
         else{
             return null;
         }
-    }, */
-    getAccessToken: function({
+    },
+    getAccessToken: function(
         url = 'https://login.salesforce.com/services/oauth2/token',
         username = 'username',
         password = 'password',
         client_id = 'myClientId',
         client_secret = 'myClientSecret'
-    } = {}){
+    ){
         let fullUrl = url + '?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
         let tokenResponse = http().post(fullUrl, null);
         return tokenResponse;
