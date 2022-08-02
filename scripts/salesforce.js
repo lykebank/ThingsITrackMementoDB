@@ -31,15 +31,14 @@ var Salesforce = {
             return null;
         }
     },
-    getAccessToken: function(
-        url = 'https://login.salesforce.com/services/oauth2/token',
-        username = 'username',
-        password = 'password',
-        client_id = 'myClientId',
-        client_secret = 'myClientSecret'
-    ){
-        let fullUrl = url + '?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
-        let tokenResponse = http().post(fullUrl, null);
-        return tokenResponse;
+    getAccessToken: function(username, password, client_id, client_secret){
+        if(username && password && client_id && client_secret){
+            let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
+            let tokenResponse = http().post(fullUrl, null);
+            return tokenResponse;
+        }
+        else{
+            return null;
+        }
     }
 }
