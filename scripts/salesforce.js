@@ -29,7 +29,7 @@ SF.prototype.login = function(username, password, client_id, client_secret){
         if(username && password && client_id && client_secret){
             let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
             let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
-            this.authHeader = loginResponse.token_type + ' ' + loginResponse.access_token;
+            this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
             this.accessToken = loginResponse.access_token        
             this.baseUrl = loginResponse.instance_url;
             this.identityUrl = loginResponse.id;
@@ -65,11 +65,6 @@ SF.prototype.parseHttpResponse = function(httpResponse){
     catch(error){
         throw error;
     }
-}
-
-SF.prototype.destructuringTest = function({firstName = 'Kyle', } = {}){
-    log('inside destructuringTest()');
-    log('firstName: ' + firstName);
 }
 
 SF.prototype.insertLocation = function(locationName){

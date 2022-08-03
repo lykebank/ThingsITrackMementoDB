@@ -1,6 +1,6 @@
 function test(){}
 
-test.prototype.destructuring = function( {name = 'kyle'} = {}){
+test.prototype.destructuring = function(placeholderArg, {name = 'kyle'} = {}){
     if(log && typeof log === 'function'){
         log('name: ' + name);
     }
