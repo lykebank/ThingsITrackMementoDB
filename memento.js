@@ -1,5 +1,4 @@
-// Mimic the Memento http().get() syntax.
-
+// Mimic the Memento http()syntax.
 function http() {
 	return new httpClient();
 }
@@ -39,11 +38,7 @@ httpClient.prototype.post = function (url, body) {
 	}
 }
 
-httpClient.prototype.headers = function (val = {}) {
-	if (!this.request) {
-		this.request = new XMLHttpRequest();
-	}
-	Object.keys(val).forEach(key => {
-		this.request.setRequestHeader(key, val[key]);
-	});
+
+function log(message){
+    //stubs out memento's log() function.
 }
