@@ -32,8 +32,7 @@ SF.prototype.login = function(username, password, client_id, client_secret){
             this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
             this.accessToken = loginResponse.access_token        
             this.baseUrl = loginResponse.instance_url;
-            this.identityUrl = loginResponse.id;
-
+            this.identityUrl = (loginResponse.id + '?version=latest').toString();
         }
         else{
             throw new Error('SF.login(): missing inputs');
@@ -69,9 +68,20 @@ SF.prototype.parseHttpResponse = function(httpResponse){
 
 SF.prototype.insertLocation = function(locationName){
     if(locationName){
+        try{    
+            return this.insertSObject('Location__c', {Name: locationName});
+        }
+        catch(error){
+            throw error;
+        }
+    }
+}
+
+SF.prototype.insertSObject = function(sobjectName, data){
+    if(sobjectName && data){
         try{
-            let url = this.sobjectsUrl + '/Location__c';
-            let body = JSON.stringify({Name: locationName});
+            let url = (this.sobjectsUrl + sobjectName).toString();
+            let body = JSON.stringify(data);
             let req = http();
             req.headers({'Authorization': this.authHeader});
             return req.post(url, body);
