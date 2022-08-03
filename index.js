@@ -1,0 +1,1 @@
+new test().destructuring({name: 'Liz'});
