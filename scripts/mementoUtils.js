@@ -1,4 +1,7 @@
-function Config(libName = 'Config'){
+function Config(libName){
+    if(!libName){
+        libName = 'Config';
+    }
     this.libName = libName;
     this.lib = libByName(libName);
 }
