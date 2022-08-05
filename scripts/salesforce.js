@@ -138,7 +138,7 @@ const thingsITrackTables = [
 SF.prototype.mapLibraryToSLibrary = function(lib){
     let sLibrary = {};
     if(lib && lib instanceof Library){
-        sLibrary.name = lib.name;
+        sLibrary.name = lib.title;
         sLibrary.entries = lib.entries().map(e => {
             return this.mapEntryToSObject(lib, e);
         })
@@ -161,7 +161,7 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
         sObject.fields = {};
 
         if(lib && lib instanceof Library){
-            let tableName = lib.name.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.name;
+            let tableName = lib.title.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.title;
             thingsITrackTables.find(t => t.name === tableName).fields.forEach(f => {
                 sObject.fields[f] = entry.field(f);
             })
