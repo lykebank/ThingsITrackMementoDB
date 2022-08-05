@@ -57,9 +57,9 @@ SF.prototype.getIdentity = function(){
 SF.prototype.postToSF = function(lib, entry){
     if(lib && entry){
         try{
-            let url = (this.mementoUrl + '/' + lib.name).toString();
+            let url = (this.mementoUrl + '/' + lib.title).toString();
             let body = {
-                lib: lib.name,
+                lib: JSON.stringify(lib),
                 entry: JSON.stringify(entry)
             };
             let req = http();
