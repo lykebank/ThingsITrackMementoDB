@@ -9,7 +9,10 @@ try{
 
     log(sf.accessToken);
 
-    sf.insertLocation('big memento test');
+    //sf.insertLocation('big memento test');
+    let l = libByName('Locations');
+    let e = l.entries()[0];
+    sf.post(l, e);
 }
 catch(error){
     if(typeof log === 'function'){

@@ -16,8 +16,13 @@
 
 function SF(username, password, connectedAppKey, connectedAppSecret){
     try{
-        this.login(username, password, connectedAppKey, connectedAppSecret);
-        this.getIdentity();
+        this.login(username, password, connectedAppKey, connectedAppSecret)
+        .then(() => {
+            this.getIdentity();
+        })
+        .catch(e => {
+            throw e;
+        })
     }
     catch(error){
         throw error;
@@ -25,24 +30,27 @@ function SF(username, password, connectedAppKey, connectedAppSecret){
 }
 
 SF.prototype.login = function(username, password, client_id, client_secret){
-    try{
-        if(username && password && client_id && client_secret){
-            let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
-            let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
-            this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
-            this.accessToken = loginResponse.access_token        
-            this.baseUrl = loginResponse.instance_url;
-            this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
-            this.mementoUrl = (this.apexUrl + 'memento').toString();
-            this.identityUrl = (loginResponse.id + '?version=latest').toString();
+    return new Promise((resolve, reject) => {
+        try{
+            if(username && password && client_id && client_secret){
+                let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
+                let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
+                this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
+                this.accessToken = loginResponse.access_token        
+                this.baseUrl = loginResponse.instance_url;
+                this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
+                this.mementoUrl = (this.apexUrl + 'memento').toString();
+                this.identityUrl = (loginResponse.id + '?version=latest').toString();
+                resolve();
+            }
+            else{
+                throw new Error('SF.login(): missing inputs');
+            }
         }
-        else{
-            throw new Error('SF.login(): missing inputs');
+        catch(error){
+            reject(error);
         }
-    }
-    catch(error){
-        throw error;
-    }
+    });
 }
 
 SF.prototype.getIdentity = function(){
@@ -54,13 +62,14 @@ SF.prototype.getIdentity = function(){
     this.queryUrl = identityResponse && identityResponse.urls ? identityResponse.urls.query : null;
 }
 
-SF.prototype.postToSF = function(lib, entry){
+SF.prototype.post = function(lib, entry){
     if(lib && entry){
         try{
             let url = (this.mementoUrl + '/' + lib.title).toString();
+            //might have to do some custom translation from memento's Library and Entry objects into our own objects, because JSON.stringify() is not working on them.
             let body = {
-                lib: JSON.stringify(lib),
-                entry: JSON.stringify(entry)
+                lib: JSON.stringify(this.mapLibraryToSLibrary(lib)),
+                entry: JSON.stringify(this.mapEntryToSObject(lib, entry))
             };
             let req = http();
             req.headers({'Authorization': this.authHeader});
@@ -86,6 +95,57 @@ SF.prototype.parseHttpResponse = function(httpResponse){
     }
 }
 
+const thingsITrackTables = [
+    {
+        name: 'Locations',
+        fields: ['Name', 'Physical Location']
+    },
+    {
+        name: 'Running Gear',
+        fields: ['Name', 'Gear Type', 'Description', 'Date Purchased', 'Mileage (manual)', 'Retired', 'Start Image', 'End Image']
+    },
+    {
+        name: 'XXXX Run Log',
+        fields: ['Date', 'Start Location', 'Distance', 'Duration', 'Gear Used', 'Description', 'Average Pace']
+    }
+];
+
+SF.prototype.mapLibraryToSLibrary = function(lib){
+    let sLibrary = {};
+    if(lib && lib instanceof Library){
+        sLibrary.name = lib.name;
+        sLibrary.entries = lib.entries().map(e => {
+            return this.mapEntryToSObject(lib, e);
+        })
+    }
+    return sLibrary;
+}
+
+SF.prototype.mapEntryToSObject = function(lib, entry){
+    let sObject = {};
+    if(entry && entry instanceof Entry){
+        sObject.author = entry.author;
+        sObject.creationTime = entry.creationTime;
+        sObject.deleted = entry.deleted;
+        sObject.description = entry.description;
+        sObject.favorites = entry.favorites;
+        sObject.mementoId = entry.id;
+        sObject.lastModifiedTime = entry.lastModifiedTime;
+        sObject.name = entry.name;
+        sObject.title = entry.title;
+        sObject.fields = {};
+
+        if(lib && lib instanceof Library){
+            let tableName = lib.name.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.name;
+            thingsITrackTables.find(t => t.name === tableName).fields.forEach(f => {
+                sObject.fields[f] = entry.field(f);
+            })
+        }
+    }
+    return sObject;
+}
+
+//old stuff...
 SF.prototype.insertLocation = function(entryId, locationName){
     if(locationName){
         try{    
