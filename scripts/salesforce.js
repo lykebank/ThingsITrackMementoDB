@@ -29,13 +29,8 @@ function SF(username, password, connectedAppKey, connectedAppSecret){
         checkRequiredInput(connectedAppKey, 'Missing connectedAppKey');
         checkRequiredInput(connectedAppSecret, 'Missing connectedAppSecret');
         
-        this.login(username, password, connectedAppKey, connectedAppSecret)
-        .then(() => {
-            this.getIdentity();
-        })
-        .catch(e => {
-            throw e;
-        })
+        this.login(username, password, connectedAppKey, connectedAppSecret);
+        this.getIdentity();
     }
     catch(error){
         throw error;
@@ -63,27 +58,24 @@ SF.prototype.getConfiguredCredentials = function(){
 }
 
 SF.prototype.login = function(username, password, client_id, client_secret){
-    return new Promise((resolve, reject) => {
-        try{
-            if(username && password && client_id && client_secret){
-                let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
-                let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
-                this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
-                this.accessToken = loginResponse.access_token        
-                this.baseUrl = loginResponse.instance_url;
-                this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
-                this.mementoUrl = (this.apexUrl + 'memento').toString();
-                this.identityUrl = (loginResponse.id + '?version=latest').toString();
-                resolve();
-            }
-            else{
-                throw new Error('SF.login(): missing inputs');
-            }
+    try{
+        if(username && password && client_id && client_secret){
+            let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
+            let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
+            this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
+            this.accessToken = loginResponse.access_token        
+            this.baseUrl = loginResponse.instance_url;
+            this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
+            this.mementoUrl = (this.apexUrl + 'memento').toString();
+            this.identityUrl = (loginResponse.id + '?version=latest').toString();
         }
-        catch(error){
-            reject(error);
+        else{
+            throw new Error('SF.login(): missing inputs');
         }
-    });
+    }
+    catch(error){
+        throw error
+    }
 }
 
 SF.prototype.getIdentity = function(){
