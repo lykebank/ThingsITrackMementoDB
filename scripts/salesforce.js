@@ -123,7 +123,7 @@ SF.prototype.parseHttpResponse = function(httpResponse){
 const thingsITrackTables = [
     {
         name: 'Locations',
-        fields: ['Name', 'Physical Location']
+        fields: ['Name', 'Physical Location', 'Rating']
     },
     {
         name: 'Running Gear',
@@ -162,9 +162,12 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
 
         if(lib && lib instanceof Library){
             let tableName = lib.title.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.title;
-            thingsITrackTables.find(t => t.name === tableName).fields.forEach(f => {
-                sObject.fields[f] = entry.field(f);
-            })
+            log('tableName: ' + tableName);
+            thingsITrackTables.find(t => t.name === tableName).fields.forEach(fieldName => {
+                log('entry.field(' + fieldName + '): ' + entry.field(fieldName));
+                sObject.fields[fieldName] = entry.field(fieldName);
+                log('sObject.fields.' + fieldName + ': ' + sObject.fields[fieldName]);
+            });
         }
     }
     return sObject;
