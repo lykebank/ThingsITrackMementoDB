@@ -123,7 +123,7 @@ SF.prototype.parseHttpResponse = function(httpResponse){
 const thingsITrackTables = [
     {
         name: 'Locations',
-        fields: ['Name', 'Physical Location', 'Rating']
+        fields: ['Name', 'Physical Location.address', 'Rating']
     },
     {
         name: 'Running Gear',
@@ -165,10 +165,12 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
             let tableName = lib.title.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.title;
             log('tableName: ' + tableName);
             thingsITrackTables.find(t => t.name === tableName).fields.forEach(fieldName => {
-                log('entry.field(' + fieldName + '): ' + entry.field(fieldName));
-                //sObject.fields[fieldName] = entry.field(fieldName);
-                sObject.fields.push({key: fieldName, value: entry.field(fieldName)});
-                //log('sObject.fields.' + fieldName + ': ' + sObject.fields[fieldName]);
+                let fieldValue = entry.field(fieldName);
+                if(fieldValue instanceof JSGeolocation){
+                    fieldValue = fieldValue.address;
+                }
+                log('entry.field(' + fieldName + '): ' + fieldValue);
+                sObject.fields.push({key: fieldName, value: fieldValue});
                 log('sObject.fields.length: ' + sObject.fields.length);
             });
         }
