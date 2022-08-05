@@ -32,6 +32,8 @@ SF.prototype.login = function(username, password, client_id, client_secret){
             this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
             this.accessToken = loginResponse.access_token        
             this.baseUrl = loginResponse.instance_url;
+            this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
+            this.mementoUrl = (this.apexUrl + 'memento').toString();
             this.identityUrl = (loginResponse.id + '?version=latest').toString();
         }
         else{
@@ -52,6 +54,24 @@ SF.prototype.getIdentity = function(){
     this.queryUrl = identityResponse && identityResponse.urls ? identityResponse.urls.query : null;
 }
 
+SF.prototype.postToSF = function(lib, entry){
+    if(lib && entry){
+        try{
+            let url = (this.mementoUrl + '/' + lib.name).toString();
+            let body = {
+                lib: lib.name,
+                entry: JSON.stringify(entry)
+            };
+            let req = http();
+            req.headers({'Authorization': this.authHeader});
+            return req.post(url, JSON.stringify(body));
+        }
+        catch(error){
+            throw error;
+        }
+    }
+}
+
 SF.prototype.parseHttpResponse = function(httpResponse){
     try{
         if(httpResponse){
@@ -66,10 +86,26 @@ SF.prototype.parseHttpResponse = function(httpResponse){
     }
 }
 
-SF.prototype.insertLocation = function(locationName){
+SF.prototype.insertLocation = function(entryId, locationName){
     if(locationName){
         try{    
-            return this.insertSObject('Location__c', {Name: locationName});
+            return this.insertSObject('Location__c', {
+                Memento_ID__c: entryId,
+                Name: locationName
+            });
+        }
+        catch(error){
+            throw error;
+        }
+    }
+}
+
+SF.prototype.upsertRun = function(entry){
+    if(entry && entry instanceof Entry){
+        try{    
+            //use Run Log entry to insert an Exercise__c record
+            //use link values to fill Salesforce lookup fields via external Id values
+            //do nothing for now :)
         }
         catch(error){
             throw error;
