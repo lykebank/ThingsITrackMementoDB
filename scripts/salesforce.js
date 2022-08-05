@@ -158,15 +158,18 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
         sObject.lastModifiedTime = entry.lastModifiedTime;
         sObject.name = entry.name;
         sObject.title = entry.title;
-        sObject.fields = {};
+        //sObject.fields = {};
+        sObject.fields = [];
 
         if(lib && lib instanceof Library){
             let tableName = lib.title.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.title;
             log('tableName: ' + tableName);
             thingsITrackTables.find(t => t.name === tableName).fields.forEach(fieldName => {
                 log('entry.field(' + fieldName + '): ' + entry.field(fieldName));
-                sObject.fields[fieldName] = entry.field(fieldName);
-                log('sObject.fields.' + fieldName + ': ' + sObject.fields[fieldName]);
+                //sObject.fields[fieldName] = entry.field(fieldName);
+                sObject.fields.push({key: fieldName, value: entry.field(fieldName)});
+                //log('sObject.fields.' + fieldName + ': ' + sObject.fields[fieldName]);
+                log('sObject.fields.length: ' + sObject.fields.length);
             });
         }
     }
