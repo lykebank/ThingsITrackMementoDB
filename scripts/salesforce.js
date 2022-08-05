@@ -158,8 +158,8 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
         sObject.lastModifiedTime = entry.lastModifiedTime;
         sObject.name = entry.name;
         sObject.title = entry.title;
-        //sObject.fields = {};
-        sObject.fields = [];
+        sObject.fields = {};
+        //sObject.fields = [];
 
         if(lib && lib instanceof Library){
             let tableName = lib.title.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.title;
@@ -167,10 +167,12 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
             thingsITrackTables.find(t => t.name === tableName).fields.forEach(fieldName => {
                 let fieldValue = entry.field(fieldName);
                 if(fieldValue instanceof JSGeolocation){
+                    log('got a JSGeolocation value');
                     fieldValue = fieldValue.address;
                 }
                 log('entry.field(' + fieldName + '): ' + fieldValue);
-                sObject.fields.push({key: fieldName, value: fieldValue});
+                sObject.fields[fieldName] = fieldValue;
+                //sObject.fields.push({key: fieldName, value: fieldValue});
                 log('sObject.fields.length: ' + sObject.fields.length);
             });
         }
