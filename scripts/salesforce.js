@@ -16,6 +16,19 @@
 
 function SF(username, password, connectedAppKey, connectedAppSecret){
     try{
+        //get credentials from Config library in case any weren't pass
+        if(!username || !password || !connectedAppKey || !connectedAppSecret){
+            let config = this.getConfiguredCredentials();
+            username = !!username ? username : config.username;
+            password = !!password ? password : config.password;
+            connectedAppKey = !!connectedAppKey ? connectedAppKey : config.client_id;
+            connectedAppSecret = !!connectedAppSecret ? connectedAppSecret : config.client_secret;
+        }
+        checkRequiredInput(username, 'Missing username');
+        checkRequiredInput(password, 'Missing password');
+        checkRequiredInput(connectedAppKey, 'Missing connectedAppKey');
+        checkRequiredInput(connectedAppSecret, 'Missing connectedAppSecret');
+        
         this.login(username, password, connectedAppKey, connectedAppSecret)
         .then(() => {
             this.getIdentity();
@@ -27,6 +40,26 @@ function SF(username, password, connectedAppKey, connectedAppSecret){
     catch(error){
         throw error;
     }
+}
+
+function checkRequiredInput(val, message){
+    if(!val){
+        throw new Error(message);
+    }
+}
+
+SF.prototype.getConfiguredCredentials = function(){
+    let creds = {};
+    let configLibrary = libByName('Config');
+    if(configLibrary){
+        ['username', 'password', 'client_id', 'client_secret'].forEach(keyName => {
+            let entry = configLibrary.findByKey(keyName);
+            if(entry){
+                creds[keyName] = entry.field('value');
+            }
+        });
+    }
+    return creds;
 }
 
 SF.prototype.login = function(username, password, client_id, client_secret){
