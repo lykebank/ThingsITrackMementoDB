@@ -123,7 +123,7 @@ SF.prototype.parseHttpResponse = function(httpResponse){
 const thingsITrackTables = [
     {
         name: 'Locations',
-        fields: ['Name', 'Physical Location.address', 'Rating']
+        fields: ['Name', 'Physical Location', 'Rating']
     },
     {
         name: 'Running Gear',
