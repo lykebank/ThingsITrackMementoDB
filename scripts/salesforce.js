@@ -13,6 +13,18 @@
 //once user has opened URL and provided user_code, the polling will succeed with a reponse containing access_token AND refresh_token
 //so in order to pop up browser window, take user to URL, show user the user_code, and keep polling, can MementoDB script do this all, or do I need to include Tasker for this?
 
+function  postToSF(){
+    try{
+        let response = new SF().post(lib(), entry());
+        message('Posted to Salesforce. Result: ' + response.body);
+    }
+    catch(error){
+        if(typeof log === 'function'){
+            log(error);
+        }
+    }
+}
+
 
 function SF(username, password, connectedAppKey, connectedAppSecret){
     try{
