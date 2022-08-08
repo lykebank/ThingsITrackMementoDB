@@ -43,6 +43,10 @@ function log(message){
     //stubs out memento's log() function.
 }
 
+function lib(){
+	return new Library();
+}
+
 function libByName(name){
     return new Library();
 }
@@ -57,6 +61,10 @@ Library.prototype.findById = function(id){return new Entry();}
 Library.prototype.findByKey = function(key){return new Entry();}
 Library.prototype.linksTo = function(linkedEntry){return [new Entry()];}
 Library.prototype.show = function(){};
+
+function entry(){
+	return new Entry();
+}
 
 function Entry(){
     this.author = 'mock author';
@@ -77,3 +85,7 @@ Entry.prototype.trash = function(){}
 Entry.prototype.untrash = function(){}
 Entry.prototype.set = function(name, value){}
 Entry.prototype.show = function(){}
+
+function message(){
+	//show quick toast message to user
+}

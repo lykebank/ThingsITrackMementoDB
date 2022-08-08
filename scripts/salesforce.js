@@ -87,22 +87,32 @@ SF.prototype.getIdentity = function(){
     this.queryUrl = identityResponse && identityResponse.urls ? identityResponse.urls.query : null;
 }
 
-SF.prototype.post = function(lib, entry){
-    if(lib && entry){
-        try{
-            let url = (this.mementoUrl + '/' + lib.title).toString();
-            //might have to do some custom translation from memento's Library and Entry objects into our own objects, because JSON.stringify() is not working on them.
+SF.prototype.post = function(mLib, mEntry){
+    try{
+        //try to get mLib or mEntry if they were passed in and if we have those built-in memento functions available
+        if(!mLib && typeof lib === 'function'){
+            mLib = lib();
+        }
+        if(!mEntry && typeof entry === 'function'){
+            mEntry = entry();
+        }
+        if(mLib && mEntry){
+            let url = (this.mementoUrl + '/' + mLib.title).toString();
+            //have to do some custom translation from memento's Library and Entry objects into our own objects, because JSON.stringify() is not working on memento's classes.
             let body = {
-                lib: JSON.stringify(this.mapLibraryToSLibrary(lib)),
-                entry: JSON.stringify(this.mapEntryToSObject(lib, entry))
+                lib: JSON.stringify(this.mapLibraryToSLibrary(mLib)),
+                entry: JSON.stringify(this.mapEntryToSObject(mLib, mEntry))
             };
             let req = http();
             req.headers({'Authorization': this.authHeader});
             return req.post(url, JSON.stringify(body));
         }
-        catch(error){
-            throw error;
+        else{
+            throw new Error('Did not post to Salesforce: Missing library or entry');
         }
+    }
+    catch(error){
+        throw error
     }
 }
 
