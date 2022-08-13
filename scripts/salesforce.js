@@ -196,6 +196,22 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                     let lonFieldName = (fieldName + '_lng').toString();
                     sObject.fields[lonFieldName] = fieldValue.lng;
                 }
+                else if(Array.isArray(fieldValue)){
+                    //for Link fields, this is list of Entry() objects
+                    //for checkbox & multiple-choice picklists, this is array of strings
+                    //for Image, this is array of paths (strings) to the image files
+                    sObject.fields[fieldName] = fieldValue.map(thisValue => {
+                        if(thisValue instanceof String){
+                            return thisValue;
+                        }
+                        if(thisValue instanceof Entry){
+                            return thisValue.id;
+                        }
+                        else{
+                            return null;
+                        }
+                    });
+                }
                 else{
                     log('entry.field(' + fieldName + '): ' + fieldValue);
                     sObject.fields[fieldName] = fieldValue;
