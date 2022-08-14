@@ -218,6 +218,22 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                     log('mapped array value to string array');
                     log(fieldName + ' array length: ' + sObject.fields[fieldName].length);
                 }
+                else if(fieldValue instanceof Object && fieldValue.length !== undefined && fieldValue.length > 0 && fieldValue.hasOwnProperty('0')){
+                    log('got an Object value, which I thought would be an array...');
+                    for(let i = 0; i < fieldValue.length; i++){
+                        let thisValue = fieldValue[i];
+                        if(thisValue instanceof String){
+                            log('thisValue is a string: ' + thisValue);
+                            sObject.fields[fieldName][i] = thisValue;
+                        }
+                        if(thisValue instanceof Entry){
+                            log('thisValue is an Entry. reading its id');
+                            log('thisValue.id: ' + thisValue.id);
+                            sObject.fields[fieldName][i] = thisValue.id;
+                        }
+                        else{}
+                    }
+                }
                 else{
                     sObject.fields[fieldName] = fieldValue;
                 }
