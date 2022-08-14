@@ -208,8 +208,8 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                         }
                         if(thisValue instanceof Entry){
                             log('thisValue is an Entry. reading its id');
-                            log('thisValue.id: ' + thisValue.id);
-                            return thisValue.id;
+                            log('thisValue.id: ' + thisValue.field('id'));
+                            return thisValue.field('id');
                         }
                         else{
                             return null;
