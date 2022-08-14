@@ -186,6 +186,7 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
             let tableName = lib.title.indexOf('Run Log') > -1 ? 'XXXX Run Log' : lib.title;
             log('tableName: ' + tableName);
             thingsITrackTables.find(t => t.name === tableName).fields.forEach(fieldName => {
+                log('fieldName: ' + fieldName);
                 let fieldValue = entry.field(fieldName);
                 if(fieldValue instanceof JSGeolocation){
                     log('got a JSGeolocation value');
