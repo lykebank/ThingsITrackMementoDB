@@ -197,33 +197,12 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                     let lonFieldName = (fieldName + '_lng').toString();
                     sObject.fields[lonFieldName] = fieldValue.lng;
                 }
-                else if(Array.isArray(fieldValue)){
-                    log('got an Array value');
-                    //for Link fields, this is list of Entry() objects
-                    //for checkbox & multiple-choice picklists, this is array of strings
-                    //for Image, this is array of paths (strings) to the image files
+                else if(fieldValue instanceof Object && fieldValue.length !== undefined && fieldValue.length > 0 && fieldValue.hasOwnProperty('0')){
+                    log('got an Object value, which I thought would be an array...');
                     sObject.fields[fieldName] = [];
                     log('set ' + fieldName + ' to empty array');
                     for(let i = 0; i < fieldValue.length; i++){
                         log('i: ' + i);
-                        let thisValue = fieldValue[i];
-                        if(thisValue instanceof String){
-                            log('thisValue is a string: ' + thisValue);
-                            sObject.fields[fieldName][i] = thisValue;
-                        }
-                        if(thisValue instanceof Entry){
-                            log('thisValue is an Entry. reading its id');
-                            log('thisValue.id: ' + thisValue.id);
-                            sObject.fields[fieldName][i] = thisValue.id;
-                        }
-                        else{}
-                    }
-                    log('mapped array value to string array');
-                    log(fieldName + ' array length: ' + sObject.fields[fieldName].length);
-                }
-                else if(fieldValue instanceof Object && fieldValue.length !== undefined && fieldValue.length > 0 && fieldValue.hasOwnProperty('0')){
-                    log('got an Object value, which I thought would be an array...');
-                    for(let i = 0; i < fieldValue.length; i++){
                         let thisValue = fieldValue[i];
                         if(thisValue instanceof String){
                             log('thisValue is a string: ' + thisValue);
