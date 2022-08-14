@@ -197,25 +197,29 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                     sObject.fields[lonFieldName] = fieldValue.lng;
                 }
                 else if(Array.isArray(fieldValue)){
+                    log('got an Array value');
                     //for Link fields, this is list of Entry() objects
                     //for checkbox & multiple-choice picklists, this is array of strings
                     //for Image, this is array of paths (strings) to the image files
                     sObject.fields[fieldName] = fieldValue.map(thisValue => {
                         if(thisValue instanceof String){
+                            log('thisValue is a string: ' + thisValue);
                             return thisValue;
                         }
                         if(thisValue instanceof Entry){
+                            log('thisValue is an Entry. reading its id');
+                            log('thisValue.id: ' + thisValue.id);
                             return thisValue.id;
                         }
                         else{
                             return null;
                         }
                     });
+                    log('mapped array value to string array');
+                    log(fieldName + ' array length: ' + sObject.fields[fieldName].length);
                 }
                 else{
-                    log('entry.field(' + fieldName + '): ' + fieldValue);
                     sObject.fields[fieldName] = fieldValue;
-                    log('sObject.fields.length: ' + sObject.fields.length);
                 }
                 
             });
