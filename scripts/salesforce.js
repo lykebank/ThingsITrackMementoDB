@@ -201,20 +201,20 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                     //for Link fields, this is list of Entry() objects
                     //for checkbox & multiple-choice picklists, this is array of strings
                     //for Image, this is array of paths (strings) to the image files
-                    sObject.fields[fieldName] = fieldValue.map(thisValue => {
+                    sObject.fields[fieldName] = [];
+                    for(let i = 0; i < fieldValue.length; i++){
+                        let thisValue = fieldValue[i];
                         if(thisValue instanceof String){
                             log('thisValue is a string: ' + thisValue);
-                            return thisValue;
+                            sObject.fields[fieldName][i] = thisValue;
                         }
                         if(thisValue instanceof Entry){
                             log('thisValue is an Entry. reading its id');
-                            log('thisValue.id: ' + thisValue.field('id'));
-                            return thisValue.field('id');
+                            log('thisValue.id: ' + thisValue.id);
+                            sObject.fields[fieldName][i] = thisValue.id;
                         }
-                        else{
-                            return null;
-                        }
-                    });
+                        else{}
+                    }
                     log('mapped array value to string array');
                     log(fieldName + ' array length: ' + sObject.fields[fieldName].length);
                 }
