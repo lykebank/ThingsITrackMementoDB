@@ -203,7 +203,9 @@ SF.prototype.mapEntryToSObject = function(lib, entry){
                     //for checkbox & multiple-choice picklists, this is array of strings
                     //for Image, this is array of paths (strings) to the image files
                     sObject.fields[fieldName] = [];
+                    log('set ' + fieldName + ' to empty array');
                     for(let i = 0; i < fieldValue.length; i++){
+                        log('i: ' + i);
                         let thisValue = fieldValue[i];
                         if(thisValue instanceof String){
                             log('thisValue is a string: ' + thisValue);
