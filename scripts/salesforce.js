@@ -75,6 +75,7 @@ SF.prototype.login = function(username, password, client_id, client_secret){
             let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
             log('fullUrl: ' + fullUrl);
             let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
+            log(loginResponse);
             this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
             log('authHeader: ' + this.authHeader);
             this.accessToken = loginResponse.access_token;
