@@ -13,7 +13,7 @@
 //once user has opened URL and provided user_code, the polling will succeed with a reponse containing access_token AND refresh_token
 //so in order to pop up browser window, take user to URL, show user the user_code, and keep polling, can MementoDB script do this all, or do I need to include Tasker for this?
 
-function  postToSF(){
+function postToSF(){
     try{
         let response = new SF().post(lib(), entry());
         message('Posted to Salesforce. Result: ' + response.body);
@@ -73,13 +73,19 @@ SF.prototype.login = function(username, password, client_id, client_secret){
     try{
         if(username && password && client_id && client_secret){
             let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
+            log('fullUrl: ' + fullUrl);
             let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
             this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
-            this.accessToken = loginResponse.access_token        
+            log('authHeader: ' + this.authHeader);
+            this.accessToken = loginResponse.access_token;
             this.baseUrl = loginResponse.instance_url;
+            log('baseUrl: ' + this.baseUrl);
             this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
+            log('apexUrl: ' + this.apexUrl);
             this.mementoUrl = (this.apexUrl + 'memento').toString();
+            log('mementoUrl: ' + this.mementoUrl);
             this.identityUrl = (loginResponse.id + '?version=latest').toString();
+            log('identityUrl: ' + this.identityUrl);
         }
         else{
             throw new Error('SF.login(): missing inputs');
