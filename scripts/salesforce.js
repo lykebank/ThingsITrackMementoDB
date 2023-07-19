@@ -73,7 +73,7 @@ SF.prototype.login = function(username, password, client_id, client_secret){
     try{
         if(username && password && client_id && client_secret){
             let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
-            //log('fullUrl: ' + fullUrl);
+            log('fullUrl: ' + fullUrl);
             let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
             if(!!loginResponse.error){
                 log('loginResponse.error: ' + loginResponse.error);
