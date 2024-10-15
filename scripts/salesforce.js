@@ -112,7 +112,7 @@ SF.prototype.getIdentity = function(){
 
 SF.prototype.post = function(mLib, mEntry){
     try{
-        //try to get mLib or mEntry if they were passed in and if we have those built-in memento functions available
+        //try to get mLib or mEntry if they weren't passed in and if we have those built-in memento functions available
         if(!mLib && typeof lib === 'function'){
             mLib = lib();
         }
@@ -164,7 +164,7 @@ const thingsITrackTables = [
     },
     {
         name: 'XXXX Run Log',
-        fields: ['Date', 'Start Location', 'Distance', 'Duration', 'Gear Used', 'Description', 'Average Pace']
+        fields: ['Date', 'Start Location', 'Distance', 'Duration', 'Gear Used', 'Description', 'Average Pace', 'Exercise Type']
     }
 ];
 
