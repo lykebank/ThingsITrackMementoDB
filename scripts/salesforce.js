@@ -79,12 +79,8 @@ SF.prototype.login = function(client_id) {
         }
 
         // Step 1: Request device code
-        let deviceResponse = this.parseHttpResponse(
-            http().post(
-                'https://login.salesforce.com/services/oauth2/token',
-                'response_type=device_code&client_id=' + client_id
-            )
-        );
+        const DEVICE_CODE_URL = 'https://login.salesforce.com/services/oauth2/token?response_type=device_code&client_id=' + client_id;
+        let deviceResponse = this.parseHttpResponse(http().post(DEVICE_CODE_URL, null));
         log('deviceResponse: ' + JSON.stringify(deviceResponse));
 
         if (deviceResponse.error) {
@@ -118,12 +114,8 @@ SF.prototype.login = function(client_id) {
             let start = Date.now();
             while (Date.now() - start < interval) { /* busy wait */ }
 
-            let pollResponse = this.parseHttpResponse(
-                http().post(
-                    'https://login.salesforce.com/services/oauth2/token',
-                    'grant_type=device&client_id=' + client_id + '&code=' + deviceCode
-                )
-            );
+            const POLL_URL = 'https://login.salesforce.com/services/oauth2/token?grant_type=device&client_id=' + client_id + '&code=' + deviceCode;
+            let pollResponse = this.parseHttpResponse(http().post(POLL_URL, null));
 
             if (pollResponse.access_token) {
                 tokenResponse = pollResponse;
@@ -190,12 +182,8 @@ SF.prototype.storeRefreshToken = function(refreshToken) {
 
 SF.prototype.refreshAccessToken = function(client_id, refreshToken) {
     try {
-        let response = this.parseHttpResponse(
-            http().post(
-                'https://login.salesforce.com/services/oauth2/token',
-                'grant_type=refresh_token&client_id=' + client_id + '&refresh_token=' + refreshToken
-            )
-        );
+        const REFRESH_URL = 'https://login.salesforce.com/services/oauth2/token?grant_type=refresh_token&client_id=' + client_id + '&refresh_token=' + refreshToken;
+        let response = this.parseHttpResponse(http().post(REFRESH_URL, null));
         if (response.access_token) {
             this.storeRefreshToken(response.refresh_token || refreshToken); // SF may rotate it
             this.setAuthState(response);
