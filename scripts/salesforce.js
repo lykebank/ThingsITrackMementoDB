@@ -74,33 +74,37 @@ SF.prototype.login = function(client_id) {
         let storedToken = this.getStoredRefreshToken();
         if (storedToken) {
             let refreshed = this.refreshAccessToken(client_id, storedToken);
-            message('logged in, reused token');
             if (refreshed) return; // All done, reused the token
         }
 
         // Step 1: Request device code
         const DEVICE_CODE_URL = 'https://login.salesforce.com/services/oauth2/token?response_type=device_code&client_id=' + client_id;
         let deviceResponse = this.parseHttpResponse(http().post(DEVICE_CODE_URL, null));
-        log('deviceResponse: ' + JSON.stringify(deviceResponse));
 
         if (deviceResponse.error) {
             throw new Error('Device code error: ' + deviceResponse.error);
         }
 
         let verificationUrl = deviceResponse.verification_uri;
+        let verificationUrlComplete = deviceResponse.verification_uri_complete; // if we wanted to skip showing user_code and just pop them straight to the URL with code embedded
         let userCode        = deviceResponse.user_code;
         let deviceCode      = deviceResponse.device_code;
         let interval        = (deviceResponse.interval || 5) * 1000; // ms
 
+        let viewUrl = verificationUrlComplete || verificationUrl; // if we have a complete URL, send them there. Otherwise, send them to the URL and show the code separately
+
         // Step 2: Open browser via Android intent
-        log('sending intent to open browser at: ' + verificationUrl);
         let i = intent("android.intent.action.VIEW");
-        i.data(verificationUrl);
+        i.data(viewUrl);
         i.send();
 
-        // Step 3: Show the user code prominently
-        message('Open your browser and enter this code:\n\n' + userCode + '\n\nThe browser should have opened automatically.');
-        log('userCode: ' + userCode);
+        if(!verificationUrlComplete){
+            // Step 3: Show the user code prominently
+            message('Enter this code in the Salesforce browser prompts: ' + userCode);
+            notification().id(1).title('Salesforce Authentication')
+            .text('Enter this code in the Salesforce browser prompts: ' + userCode)
+            .show()
+        }
 
         // Step 4: Poll until authorized (max ~10 minutes = 120 attempts at 5s)
         let tokenResponse = null;
