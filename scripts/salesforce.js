@@ -74,6 +74,7 @@ SF.prototype.login = function(client_id) {
         let storedToken = this.getStoredRefreshToken();
         if (storedToken) {
             let refreshed = this.refreshAccessToken(client_id, storedToken);
+            message('logged in, reused token');
             if (refreshed) return; // All done, reused the token
         }
 
@@ -84,6 +85,7 @@ SF.prototype.login = function(client_id) {
                 'response_type=device_code&client_id=' + client_id
             )
         );
+        log('deviceResponse: ' + JSON.stringify(deviceResponse));
 
         if (deviceResponse.error) {
             throw new Error('Device code error: ' + deviceResponse.error);
@@ -95,12 +97,14 @@ SF.prototype.login = function(client_id) {
         let interval        = (deviceResponse.interval || 5) * 1000; // ms
 
         // Step 2: Open browser via Android intent
+        log('sending intent to open browser at: ' + verificationUrl);
         let i = intent("android.intent.action.VIEW");
         i.data(verificationUrl);
         i.send();
 
         // Step 3: Show the user code prominently
         message('Open your browser and enter this code:\n\n' + userCode + '\n\nThe browser should have opened automatically.');
+        log('userCode: ' + userCode);
 
         // Step 4: Poll until authorized (max ~10 minutes = 120 attempts at 5s)
         let tokenResponse = null;
