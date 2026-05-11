@@ -26,25 +26,17 @@ function postToSF(){
 }
 
 
-function SF(username, password, connectedAppKey, connectedAppSecret){
-    try{
-        //get credentials from Config library in case any weren't pass
-        if(!username || !password || !connectedAppKey || !connectedAppSecret){
+function SF(connectedAppKey) {
+    try {
+        if (!connectedAppKey) {
             let config = this.getConfiguredCredentials();
-            username = !!username ? username : config.username;
-            password = !!password ? password : config.password;
-            connectedAppKey = !!connectedAppKey ? connectedAppKey : config.client_id;
-            connectedAppSecret = !!connectedAppSecret ? connectedAppSecret : config.client_secret;
+            connectedAppKey = config.client_id;
         }
-        checkRequiredInput(username, 'Missing username');
-        checkRequiredInput(password, 'Missing password');
         checkRequiredInput(connectedAppKey, 'Missing connectedAppKey');
-        checkRequiredInput(connectedAppSecret, 'Missing connectedAppSecret');
-        
-        this.login(username, password, connectedAppKey, connectedAppSecret);
-        this.getIdentity();
+
+        this.login(connectedAppKey); // no username/password needed
     }
-    catch(error){
+    catch(error) {
         throw error;
     }
 }
@@ -59,55 +51,157 @@ SF.prototype.getConfiguredCredentials = function(){
     let creds = {};
     let configLibrary = libByName('Config');
     if(configLibrary){
-        ['username', 'password', 'client_id', 'client_secret'].forEach(keyName => {
+        //const KEYS = ['username', 'password', 'client_id', 'client_secret'];
+        //for device flow, only need client_id
+        const KEYS = ['client_id'];
+        KEYS.forEach(keyName => {
             let entry = configLibrary.findByKey(keyName);
             if(entry){
-                creds[keyName] = entry.field('value');
+                creds[keyName] = entry.field('valueEnc');
             }
         });
     }
     return creds;
 }
 
-SF.prototype.login = function(username, password, client_id, client_secret){
-    try{
-        if(username && password && client_id && client_secret){
-            let fullUrl = 'https://login.salesforce.com/services/oauth2/token?grant_type=password&client_id=' + client_id + '&client_secret=' + client_secret + '&username=' + username + '&password=' + password;
-            log('fullUrl: ' + fullUrl);
-            let loginResponse = this.parseHttpResponse(http().post(fullUrl, null));
-            if(!!loginResponse.error){
-                log('loginResponse.error: ' + loginResponse.error);
-                log('loginResponse.error_description: ' + loginResponse.error_description);
+SF.prototype.login = function(client_id) {
+    try {
+        if (!client_id) {
+            throw new Error('SF.login(): missing client_id');
+        }
+
+        // Check if we have a stored refresh token first
+        let storedToken = this.getStoredRefreshToken();
+        if (storedToken) {
+            let refreshed = this.refreshAccessToken(client_id, storedToken);
+            if (refreshed) return; // All done, reused the token
+        }
+
+        // Step 1: Request device code
+        let deviceResponse = this.parseHttpResponse(
+            http().post(
+                'https://login.salesforce.com/services/oauth2/token',
+                'response_type=device_code&client_id=' + client_id
+            )
+        );
+
+        if (deviceResponse.error) {
+            throw new Error('Device code error: ' + deviceResponse.error);
+        }
+
+        let verificationUrl = deviceResponse.verification_uri;
+        let userCode        = deviceResponse.user_code;
+        let deviceCode      = deviceResponse.device_code;
+        let interval        = (deviceResponse.interval || 5) * 1000; // ms
+
+        // Step 2: Open browser via Android intent
+        let i = intent("android.intent.action.VIEW");
+        i.data(verificationUrl);
+        i.send();
+
+        // Step 3: Show the user code prominently
+        message('Open your browser and enter this code:\n\n' + userCode + '\n\nThe browser should have opened automatically.');
+
+        // Step 4: Poll until authorized (max ~10 minutes = 120 attempts at 5s)
+        let tokenResponse = null;
+        let attempts = 0;
+        let maxAttempts = 120;
+
+        while (attempts < maxAttempts) {
+            attempts++;
+
+            // Wait for the polling interval
+            let start = Date.now();
+            while (Date.now() - start < interval) { /* busy wait */ }
+
+            let pollResponse = this.parseHttpResponse(
+                http().post(
+                    'https://login.salesforce.com/services/oauth2/token',
+                    'grant_type=device&client_id=' + client_id + '&code=' + deviceCode
+                )
+            );
+
+            if (pollResponse.access_token) {
+                tokenResponse = pollResponse;
+                break;
             }
-                
-            this.authHeader = (loginResponse.token_type + ' ' + loginResponse.access_token).toString();
-            log('authHeader: ' + this.authHeader);
-            this.accessToken = loginResponse.access_token;
-            this.baseUrl = loginResponse.instance_url;
-            log('baseUrl: ' + this.baseUrl);
-            this.apexUrl = (this.baseUrl + '/services/apexrest/').toString();
-            log('apexUrl: ' + this.apexUrl);
-            this.mementoUrl = (this.apexUrl + 'memento').toString();
-            log('mementoUrl: ' + this.mementoUrl);
-            this.identityUrl = (loginResponse.id + '?version=latest').toString();
-            log('identityUrl: ' + this.identityUrl);
+
+            // 'authorization_pending' is normal — keep polling
+            // 'slow_down' means we should back off
+            if (pollResponse.error === 'slow_down') {
+                interval += 5000;
+            } else if (pollResponse.error && pollResponse.error !== 'authorization_pending') {
+                throw new Error('Polling error: ' + pollResponse.error);
+            }
         }
-        else{
-            throw new Error('SF.login(): missing inputs');
+
+        if (!tokenResponse) {
+            throw new Error('Device flow timed out — user did not authorize in time');
         }
+
+        // Step 5: Store refresh token in Config library for future runs
+        this.storeRefreshToken(tokenResponse.refresh_token);
+
+        // Step 6: Set auth state
+        this.setAuthState(tokenResponse);
     }
-    catch(error){
-        throw error
+    catch(error) {
+        throw error;
     }
 }
 
-SF.prototype.getIdentity = function(){
-    let req = http();
-    req.headers({'Authorization': this.authHeader, 'Accept': 'application/json'});
-    let identityResponse = this.parseHttpResponse(req.get(this.identityUrl));
-    this.restUrl = identityResponse && identityResponse.urls ? identityResponse.urls.rest : null;
-    this.sobjectsUrl = identityResponse && identityResponse.urls ? identityResponse.urls.sobjects : null;
-    this.queryUrl = identityResponse && identityResponse.urls ? identityResponse.urls.query : null;
+SF.prototype.setAuthState = function(tokenResponse) {
+    this.authHeader  = (tokenResponse.token_type + ' ' + tokenResponse.access_token).toString();
+    this.accessToken = tokenResponse.access_token;
+    this.baseUrl     = tokenResponse.instance_url;
+    this.apexUrl     = (this.baseUrl + '/services/apexrest/').toString();
+    this.mementoUrl  = (this.apexUrl + 'memento').toString();
+    this.identityUrl = (tokenResponse.id + '?version=latest').toString();
+}
+
+SF.prototype.getStoredRefreshToken = function() {
+    let configLibrary = libByName('Config');
+    if (configLibrary) {
+        let entry = configLibrary.findByKey('sf');
+        if (entry) return entry.field('valueEnc');
+    }
+    return null;
+}
+
+SF.prototype.storeRefreshToken = function(refreshToken) {
+    let configLibrary = libByName('Config');
+    if (configLibrary && refreshToken) {
+        let existing = configLibrary.findByKey('sf');
+        if (existing) {
+            existing.set('valueEnc', refreshToken);
+        } else {
+            configLibrary.create({
+                'name': 'sf',
+                'key': 'sf',
+                'valueEnc': refreshToken
+            });
+        }
+    }
+}
+
+SF.prototype.refreshAccessToken = function(client_id, refreshToken) {
+    try {
+        let response = this.parseHttpResponse(
+            http().post(
+                'https://login.salesforce.com/services/oauth2/token',
+                'grant_type=refresh_token&client_id=' + client_id + '&refresh_token=' + refreshToken
+            )
+        );
+        if (response.access_token) {
+            this.storeRefreshToken(response.refresh_token || refreshToken); // SF may rotate it
+            this.setAuthState(response);
+            return true;
+        }
+        return false; // Refresh token expired — fall through to full device flow
+    }
+    catch(e) {
+        return false;
+    }
 }
 
 SF.prototype.post = function(mLib, mEntry){
